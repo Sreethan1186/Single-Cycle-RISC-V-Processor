@@ -1,6 +1,5 @@
 module id_decoder(
     input  logic [31:0] Instr,      // Instruction from instruction memory
-
     output logic [6:0]  op,         // Opcode field of instruction
     output logic [4:0]  rd,         // Destination register
     output logic [2:0]  funct3,     // funct3 field

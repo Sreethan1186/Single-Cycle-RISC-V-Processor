@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 module id_decoder(
     input  logic [31:0] Instr,      // Instruction from instruction memory
 

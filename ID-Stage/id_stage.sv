@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 module id_stage(
     input  logic        clk,         // Clock
     input  logic [31:0] Instr,       // Instruction from IF stage

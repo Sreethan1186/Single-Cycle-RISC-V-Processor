@@ -1,65 +1,145 @@
-module aludec(
-    input  logic        opb5,       // Opcode bit 5
-    input  logic [2:0]  funct3,     // Function field from instruction
-    input  logic        funct7b5,   // Bit 5 of funct7 field
-    input  logic [1:0]  ALUOp,      // ALU operation from main decoder
-    output logic [2:0] ALUControl  // ALU operation code
+module alu_control(
+    input  logic [2:0] alu_op,       // ALU operation class from main control
+    input  logic [2:0] fn3,          // Function field from instruction
+    input  logic [6:0] imm11_5,      // Instruction bits [31:25]
+    input  logic       fn7_5,        // Instruction bit [30]
+
+    output logic [4:0] control_out  // ALU operation control
 );
 
     always_comb begin
 
         // Default operation: ADD
-        ALUControl = 3'b000;
+        control_out = 5'b00000;
 
-        case (ALUOp)
+        case (alu_op)
 
-            // Load/store address calculation
-            2'b00: begin
-                ALUControl = 3'b000;  // ADD
-            end
+            // R-type instructions
+            3'b000: begin
+                case (fn3)
 
-            // Branch comparison
-            2'b01: begin
-                ALUControl = 3'b001;  // SUB
-            end
-
-            // R-type and I-type arithmetic/logical operations
-            2'b10: begin
-                case (funct3)
-
-                    // ADD / ADDI or SUB
+                    // ADD / SUB
                     3'b000: begin
-                        if (opb5 && funct7b5)
-                            ALUControl = 3'b001; // SUB
+                        if (fn7_5)
+                            control_out = 5'b00001;
                         else
-                            ALUControl = 3'b000; // ADD
+                            control_out = 5'b00000;
                     end
 
-                    // SLT / SLTI
-                    3'b010: begin
-                        ALUControl = 3'b101;
+                    // SLL
+                    3'b001: control_out = 5'b00101;
+
+                    // SLT
+                    3'b010: control_out = 5'b01000;
+
+                    // SLTU
+                    3'b011: control_out = 5'b01001;
+
+                    // XOR
+                    3'b100: control_out = 5'b00010;
+
+                    // SRL / SRA
+                    3'b101: begin
+                        if (fn7_5)
+                            control_out = 5'b00111;
+                        else
+                            control_out = 5'b00110;
                     end
 
-                    // AND / ANDI
-                    3'b111: begin
-                        ALUControl = 3'b010;
-                    end
+                    // OR
+                    3'b110: control_out = 5'b00011;
 
-                    // OR / ORI
-                    3'b110: begin
-                        ALUControl = 3'b011;
-                    end
+                    // AND
+                    3'b111: control_out = 5'b00100;
 
-                    // Unsupported funct3
-                    default: begin
-                        ALUControl = 3'b000;
-                    end
+                    default: control_out = 5'b00000;
 
                 endcase
             end
 
+            // I-type arithmetic and logical instructions
+            3'b001: begin
+                case (fn3)
+
+                    // ADDI
+                    3'b000: control_out = 5'b00000;
+
+                    // SLLI
+                    3'b001: control_out = 5'b00101;
+
+                    // SLTI
+                    3'b010: control_out = 5'b01000;
+
+                    // SLTIU
+                    3'b011: control_out = 5'b01001;
+
+                    // XORI
+                    3'b100: control_out = 5'b00010;
+
+                    // SRLI / SRAI
+                    3'b101: begin
+                        if (imm11_5 == 7'b0100000)
+                            control_out = 5'b00111;
+                        else
+                            control_out = 5'b00110;
+                    end
+
+                    // ORI
+                    3'b110: control_out = 5'b00011;
+
+                    // ANDI
+                    3'b111: control_out = 5'b00100;
+
+                    default: control_out = 5'b00000;
+
+                endcase
+            end
+
+            // Load instructions: address calculation
+            3'b010: begin
+                control_out = 5'b00000;
+            end
+
+            // Store instructions: address calculation
+            3'b011: begin
+                control_out = 5'b00000;
+            end
+
+            // Branch instructions
+            3'b100: begin
+                case (fn3)
+
+                    // BEQ
+                    3'b000: control_out = 5'b01010;
+
+                    // BNE
+                    3'b001: control_out = 5'b01011;
+
+                    // BLT
+                    3'b100: control_out = 5'b01100;
+
+                    // BGE
+                    3'b101: control_out = 5'b01101;
+
+                    // BLTU
+                    3'b110: control_out = 5'b01110;
+
+                    // BGEU
+                    3'b111: control_out = 5'b01111;
+
+                    default: control_out = 5'b00000;
+
+                endcase
+            end
+
+            // JAL and LUI
+            3'b110: begin
+                control_out = 5'b00000;
+            end
+
+            // Default operation
             default: begin
-                ALUControl = 3'b000;
+                control_out = 5'b00000;
             end
 
         endcase

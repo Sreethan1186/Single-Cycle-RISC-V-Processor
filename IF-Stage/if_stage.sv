@@ -1,4 +1,3 @@
-// Instruction Fetch Stage
 module if_stage(
     input  logic        clk,                 // Clock signal
     input  logic        reset,               // Asynchronous active-high reset

@@ -1,0 +1,17 @@
+stage: execute
+
+source_files:
+  - IF-Stage/if_stage.sv
+
+  - ID-Stage/id_stage.sv
+  - ID-Stage/decoder.sv
+  - ID-Stage/imm_generator.sv
+  - ID-Stage/maindec.sv
+  - ID-Stage/regfile.sv
+  - ID-Stage/alu_control.sv
+
+  - EX_Stage/ex_stage.sv
+  - EX_Stage/alu.sv
+
+
+  

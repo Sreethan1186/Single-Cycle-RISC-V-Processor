@@ -1,6 +1,7 @@
 module id_stage(
     input  logic        clk,         // Clock
     input  logic [31:0] Instr,       // Instruction from IF stage
+    input  logic        Zero,        // Zero flag from Execute stage
 
     // Decoded instruction fields
     output logic [6:0]  op,          // Opcode field
@@ -28,16 +29,6 @@ module id_stage(
     output logic [2:0]  ALUControl,  // ALU operation code
     output logic [1:0]  ImmSrc       // Immediate type selector
 );
-
-    // Temporary zero flag until the execution stage is implemented
-    logic Zero;
-
-    // Internal signal for the main decoder's branch output
-    logic [31:0] imm_instr;
-
-    // Zero is not available until the ALU is implemented
-    // Keep it low during initial instruction-decode testing
-    assign Zero = 1'b0;
 
     // Decode the instruction into its individual fields
     id_decoder decoder(
@@ -81,10 +72,8 @@ module id_stage(
     );
 
     // Generate the immediate value from the instruction
-    assign imm_instr = Instr;
-
     extend ext(
-        .instr(imm_instr[31:7]),
+        .instr(Instr[31:7]),
         .immsrc(ImmSrc),
         .immext(ImmExt)
     );

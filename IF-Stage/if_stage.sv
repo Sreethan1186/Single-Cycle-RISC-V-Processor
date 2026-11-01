@@ -1,48 +1,34 @@
+// Instruction Fetch Stage
 module if_stage(
-    input  logic        clk,
-    input  logic        reset,
+    input  logic        clk,                 // Clock signal
+    input  logic        reset,               // Asynchronous active-high reset
+    input  logic        stall,               // Stall signal to hold the PC
+    input  logic        and_out,              // Selects branch/jump target
+    input  logic [31:0] pc_signed_offset,     // Branch/jump target address
 
-    // Next-PC selection
-    input  logic        PCSrc,
-    input  logic [31:0] PC_target,
-
-    // IF stage outputs
-    output logic [31:0] PC,
-    output logic [31:0] PCPlus4,
-    output logic [31:0] Instr
+    output logic [31:0] address,              // Current program counter
+    output logic [31:0] pc_new                // Next sequential PC (PC + 4)
 );
 
-    logic [31:0] PCNext;
+    logic [31:0] next_pc;
 
-    // Calculate PC + 4 for the next sequential instruction
-    adder pc_adder(
-        .a(PC),
-        .b(32'd4),
-        .y(PCPlus4)
-    );
+    // Calculate PC + 4
+    assign pc_new = address + 32'd4;
 
-    // Select sequential PC or branch/jump target
+    // Select the next PC
     always_comb begin
-        if (PCSrc)
-            PCNext = PC_target;
+        if (and_out)
+            next_pc = pc_signed_offset;
         else
-            PCNext = PCPlus4;
+            next_pc = pc_new;
     end
 
-    // Program counter register
-    flopr #(.WIDTH(32)) pc_reg(
-        .clk(clk),
-        .reset(reset),
-        .d(PCNext),
-        .q(PC)
-    );
-
-    // Instruction memory reads the instruction at the current PC
-    imem instruction_memory(
-        .a(PC),
-        .rd(Instr)
-    );
+    // Program Counter with asynchronous reset and stall support
+    always_ff @(posedge clk or posedge reset) begin
+        if (reset)
+            address <= 32'h8000_0000;
+        else if (!stall)
+            address <= next_pc;
+    end
 
 endmodule
-
-
